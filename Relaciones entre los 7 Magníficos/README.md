@@ -23,3 +23,14 @@ Experimento sistemático que compara **8 métodos diferentes** para detectar rel
 | 6 | **Cross-Correlation** | Correlación con rezago | Timing |
 | 7 | **Mutual Information** | Dependencia general | Feature selection |
 | 8 | **Dynamic Time Warping** | Forma trayectoria | Pattern matching |
+
+
+## Resumen Final de los 8 Metodos
+
+* Pearson/Spearman: META-MSFT parecen los más correlacionados (0.60)
+* dCor + Gap: AMZN-META es el más lineal y estable
+* Vol_corr: AMZN-META 0.80, comparten miedo
+* Granger (precio): META → AMZN
+* Cross-corr (vol): AMZN → META por 1 día
+* Cointegración: ninguno cointegrado fuerte (todos p>0.1)
+* MI: AMZN es el centro de información, AMZN-META 0.256
