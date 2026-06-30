@@ -1,0 +1,115 @@
+Excelente punto de partida. Los **Modelos Ocultos de Markov (HMM)** son fantásticos para detectar *estados* no observables, pero asumen que las transiciones son probabilísticas y fijas. 
+
+Para investigar a fondo **regímenes** (cambios en la media/volatilidad) y **cambios estructurales** (cambios permanentes en los parámetros del modelo), te sugiero investigar estos métodos, clasificados por su enfoque:
+
+---
+
+**1. Enfoque Econométrico y de Series Temporales (Los "Clásicos")**
+
+- **Prueba de Chow (Chow Test)**: La más básica. Prueba si los coeficientes de una regresión son iguales en dos submuestras diferentes. Útil si ya sabes *cuándo* ocurrió el cambio (ej. crisis del 2008).
+- **Pruebas CUSUM y CUSUMSQ (Cumulative Sum)**: Basadas en residuos recursivos. Ideales para detectar *cuándo* exactamente ocurre un quiebre estructural en la media o la varianza de una serie, sin necesidad de saber la fecha.
+- **Algoritmo de Bai-Perron (Bai & Perron, 2003)**: **IMPLEMENTACIÓN OBLIGATORIA**. Detecta *múltiples* quiebres estructurales en una regresión lineal en fechas desconocidas. Te dice: "Hay 3 quiebres, ocurrieron en X, Y y Z fechas". Es el estándar en econometría financiera.
+- **Prueba de Kapetanios (KPSS con quiebres)**: Para diferenciar entre un cambio estructural y una raíz unitaria (tendencia estocástica).
+
+---
+
+**2. Extensiones de los Modelos de Markov (Más allá del HMM básico)**
+
+- **Modelo MS-AR (Markov-Switching Autoregressive)**: Es la evolución del HMM. En lugar de solo ocultar estados, modela cómo cambian los coeficientes AR (autorregresivos) según el régimen. Muy usado para capturar la *persistencia* de los regímenes alcistas/bajistas.
+- **MS-GARCH (Markov-Switching GARCH)**: Fundamental para la bolsa. Detecta cambios estructurales en la *volatilidad* (no solo en el rendimiento), diferenciando regímenes de alta volatilidad (pánico) y baja volatilidad (tranquilidad).
+
+---
+
+**3. Modelos de Umbral y Transición (Cambios Graduales vs. Bruscos)**
+
+- **TAR (Threshold Autoregressive) y SETAR**: El cambio no es probabilístico (como HMM), sino que depende de una variable umbral (ej. si el rendimiento de ayer supera el +2%, cambiamos de régimen). Muy intuitivo para traders.
+- **STAR (Smooth Transition AR)**: En lugar de un cambio brusco (régimen 0 o 1), el cambio es *gradual* y suave. Excelente para captar periodos de transición prolongados (ej. cambios de política monetaria).
+
+---
+
+**4. Detección de Puntos de Cambio (Change Point Detection) - Enfoque Algorítmico**
+
+- **PELT (Pruned Exact Linear Time)**: Algoritmo de detección de múltiples puntos de cambio que minimiza un criterio de información (como BIC). Es rapidísimo y excelente para series largas como el S&P 500 diario.
+- **Binary Segmentation (Segmentación Binaria)**: Busca iterativamente el punto de cambio más significativo, divide la serie y repite el proceso.
+- **Detección de cambios en varianza (CUSUM de cuadrados o Algoritmo de Inclán-Tiao)**: Específico para detectar aumentos o caídas bruscas en la volatilidad (útil para el VIX).
+
+---
+
+**5. Enfoque Bayesiano (Incertidumbre y Actualización en Tiempo Real)**
+
+- **Modelo de Cambio de Régimen Bayesiano con Gibbs Sampling**: En lugar de darte un punto exacto, te da una *probabilidad a posteriori* de que ocurra un quiebre en cada fecha. 
+- **Filtro de Partículas (Particle Filters)**: Similar al HMM pero sin asumir distribuciones normales. Ideal si quieres detectar regímenes en tiempo real (online) mientras llegan nuevos datos del NASDAQ.
+
+---
+
+**6. Filtrado de Kalman y Espacio de Estados (Parámetros Variables en el Tiempo - TVP)**
+
+- **Modelo TVP-VAR (Time-Varying Parameter VAR)**: En lugar de cambiar de "régimen" (estado discreto), los coeficientes del modelo cambian *suavemente* en el tiempo (parámetros continuos). Perfecto para ver cómo cambia la correlación entre sectores del S&P 500 a lo largo de los años.
+- **Filtro de Kalman Adaptativo**: Estima el "factor de descuento" que pondera más los datos recientes, señalando cambios en la tendencia subyacente.
+
+---
+
+**7. Machine Learning y No Paramétricos (Detección No Lineal)**
+
+- **Isolation Forest (en ventanas deslizantes)**: Úsalo para detectar *anomalías* estructurales en momentos específicos (ej. caídas del -5% en 5 minutos). Al aplicar detección de outliers por ventanas, puedes marcar puntos de cambio de régimen.
+- **Clustering con K-Means o GMM (Gaussian Mixture Models) sobre features rodantes**: En lugar de usarlo solo sobre el precio, úsalo sobre la matriz de *medias móviles, RSI y volatilidad* para clasificar el estado actual del mercado (ej. "Tendencia fuerte", "Rango lateral", "Alta volatilidad bajista").
+- **t-SNE o UMAP con etiquetado temporal**: Para visualizar cómo se agrupan los datos en diferentes épocas históricas y detectar cambios en la estructura de correlación.
+
+---
+
+**8. Enfoque de Frecuencia (Wavelets)**
+
+- **Análisis Wavelet (Wavelet Transform)**: Permite detectar cambios estructurales en *diferentes frecuencias* a la vez. Por ejemplo, un régimen de largo plazo (tendencia secular) puede cambiar en 2010, pero un régimen de corto plazo (ruido diario) puede cambiar en 2022. Las wavelets lo separan.
+
+---
+
+### 📌 Recomendación práctica para tu investigación:
+
+Si trabajas con **S&P 500 / NASDAQ**, te sugiero esta combinación ganadora:
+
+1. Usa **Bai-Perron** para saber cuántos quiebres tuvo la media en los últimos 20 años.
+2. Usa **MS-GARCH** para modelar los regímenes de volatilidad (no es lo mismo una corrección suave que un crash).
+3. Usa **PELT** para detectar puntos de cambio en la tendencia subyacente (quitando el ruido con una media móvil).
+4. Contrasta con un **TVP-VAR Bayesiano** para ver si los parámetros cambiaron suavemente o realmente hubo saltos bruscos.
+
+¿Te gustaría que profundice en la implementación matemática de alguno de estos en particular (ej. cómo se estima el MS-GARCH o el algoritmo de Bai-Perron)?
+
+
+##########################################################################################################3
+Parte 2
+
+
+
+1. Pairs Trading real (no solo correlación)
+Ya tienes Pearson_resid y MI_resid. Lo que falta es:
+
+Test de Engle-Granger con residuos (ya lo tienes en el código, pero no lo usaste): si el spread AMZN - β·META es estacionario, puedes tradear mean-reversion
+Half-life del spread: ¿cuántos días tarda en volver a la media? Si es >60 días, no sirve
+Backtest con costos: con 0.05% de comisión, ¿el par MSFT-AMZN (tu #1) gana?
+Esto te da una estrategia, no un número.
+
+2. Modelos de factores (lo que quita el SPY bien hecho)
+Quitaste SPY con una regresión simple. El siguiente paso es Fama-French 5 factores + momentum:
+
+¿Cuánto de AMZN-META se explica por SMB, HML, RMW, CMA, MOM?
+El residuo puro es tu alpha de pair
+Te sorprendería cuánto desaparece cuando agregas "tech momentum".
+
+3. Causalidad y redes (quién mueve a quién)
+Ya tienes Granger, pero en 5 lags. Haz:
+
+VAR y impulse response: si AMZN sube 1% hoy, ¿cuánto sube META en 3 días?
+Transfer Entropy (versión direccional de MI): ¿la información fluye AMZN→META o al revés?
+Construye un grafo de las 7 magníficas y ve quién es el hub
+4. Regímenes y cambios estructurales
+Tu gráfico rolling ya lo mostró: 2020 no es 2025.
+
+Hidden Markov Model (HMM) de 2 estados: "acoplado" vs "desacoplado"
+Chow test: ¿en qué fecha exacta se rompió AMZN-META? (spoiler: marzo 2022)
+Ajusta la alerta que te di para que no sea 0.10 fijo, sino percentil dinámico
+5. De pares a portafolio
+En vez de 1 par, construye:
+
+Minimum Spanning Tree con distance = 1 - |Pearson_resid|
+Hierarchical Risk Parity usando tu matriz MI_resid como distancia
+¿Qué portafolio de las 7 tiene menor riesgo idiosincrático?
